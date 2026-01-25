@@ -13,15 +13,17 @@ Route::prefix('user')->group(function () {
     Route::post('/login',[AuthUserController::class,'login']);
  
 });
-Route::middleware(['jwt.decode'])->group(function () {
+Route::middleware(['user.jwt.decode'])->group(function () {
     Route::post('/estimate-fare',[DriverLocationController::class,'estimateFare']);
-    Route::post('/request-ride',[DriverLocationController::class,'requestRide']);
- 
-   
+    Route::post('/request-ride',[DriverLocationController::class,'requestRide']);  
 });
+
+Route::middleware(['driver.jwt.decode'])->group(function () {
+     Route::post ('driver/status', [DriverLocationController::class, 'updateStatus']);
+    Route::get('driver/nearby',[DriverLocationController::class,'nearbyDrivers']);   
+
+   }); 
 Route::prefix('driver')->group(function () {
     Route::post('/register',[AuthDriverController::class,'register']);
     Route::post('/login',[AuthDriverController::class,'login']);
-    Route::post ('/status', [DriverLocationController::class, 'updateStatus']);
-    Route::get('/nearby',[DriverLocationController::class,'nearbyDrivers']);   
-});
+   });

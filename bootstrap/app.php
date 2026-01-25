@@ -13,7 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
          $middleware->alias([
-        'jwt.decode' => \App\Http\Middleware\DecodeJwtMiddleware::class,
+        'user.jwt.decode' => \App\Http\Middleware\DecodeJwtMiddleware::class,
+        'driver.jwt.decode' => \App\Http\Middleware\DecodeDriverJwtMiddleware::class,
     ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
