@@ -4,25 +4,23 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-
+use App\Http\Requests\UpdateDriverStatusRequest;
 class DriverLocationController extends Controller
 {
-    //
 
-    public function updateStatus(Request $request)
+    public function updateStatus(UpdateDriverStatusRequest $request)
     {
-        $payload = [
-            'driver_id' => $request->input('driver_id'),
-            'status' => $request->input('status'),
-            'lat' => $request->input('lat'),
-            'lng' => $request->input('lng'),
-        ];
+        $driver = $request->get('auth_driver');
+        $data=[
+          'driver_id' => (string) $driver->id,   
+          'status'    => $request->input('status'),
+          'lat'       =>  $request->input('lat'),
+          'lng'       =>  $request->input('lng'),];
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
-        ])->post(config('services.location_service.url').'/driver/status', $payload);
-
+        ])->post(config('services.location_service.url').'/driver/status', $data);
         if ($response->failed()) {
             return response()->json([
                 'message' => 'Failed to update driver status',
