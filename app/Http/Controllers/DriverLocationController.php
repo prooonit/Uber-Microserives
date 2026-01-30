@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use App\Http\Requests\UpdateDriverStatusRequest;
+use App\Http\Requests\RequestrideRequest;
 class DriverLocationController extends Controller
 {
 
@@ -96,10 +97,9 @@ class DriverLocationController extends Controller
         return $distance; 
     }
 
-    public function requestRide(Request $request)
+    public function requestRide(RequestrideRequest $request)
     {
         $payload = [
-            'user_id' => $request->input('user_id'),
             'pickup_lat' => $request->input('pickup_lat'),
             'pickup_lng' => $request->input('pickup_lng'),
             'dropoff_lat' => $request->input('dropoff_lat'),
