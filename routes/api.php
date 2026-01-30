@@ -21,16 +21,13 @@ Route::prefix('user')->group(function () {
 });
 
 
-
-
-
-
 Route::prefix('driver')->group(function () {
     Route::post('/register', [AuthDriverController::class, 'register']);
     Route::post('/login', [AuthDriverController::class, 'login']);
 
     Route::middleware(['driver.jwt.decode'])->group(function () {
         Route::post('/status', [DriverLocationController::class, 'updateStatus']);
+        Route::post('/notification', [DriverLocationController::class, 'sendNotification']);
     });
 
 });

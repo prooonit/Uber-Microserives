@@ -6,22 +6,25 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use App\Http\Requests\UpdateDriverStatusRequest;
 use App\Http\Requests\RequestrideRequest;
+use App\Http\Requests\DriverNotificationRequest;
+use Illuminate\Support\Facades\DB;
 class DriverLocationController extends Controller
 {
 
     public function updateStatus(UpdateDriverStatusRequest $request)
     {
         $driver = $request->get('auth_driver');
-        $data=[
-          'driver_id' => (string) $driver->id,   
-          'status'    => $request->input('status'),
-          'lat'       =>  $request->input('lat'),
-          'lng'       =>  $request->input('lng'),];
+        $data = [
+            'driver_id' => (string) $driver->id,
+            'status' => $request->input('status'),
+            'lat' => $request->input('lat'),
+            'lng' => $request->input('lng'),
+        ];
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
-        ])->post(config('services.location_service.url').'/driver/status', $data);
+        ])->post(config('services.location_service.url') . '/driver/status', $data);
         if ($response->failed()) {
             return response()->json([
                 'message' => 'Failed to update driver status',
@@ -38,18 +41,18 @@ class DriverLocationController extends Controller
     {
         $lat = $request->input('lat');
         $lng = $request->input('lng');
-        $radius = $request->input('radius', 5); 
+        $radius = $request->input('radius', 5);
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
-        ])->get(config('services.location_service.url').'/driver/nearby', [
-            'lat' => $lat,
-            'lng' => $lng,
-            'radius' => $radius,
-        ]);
+        ])->get(config('services.location_service.url') . '/driver/nearby', [
+                    'lat' => $lat,
+                    'lng' => $lng,
+                    'radius' => $radius,
+                ]);
 
-        if(!$response->successful()) {
+        if (!$response->successful()) {
             return response()->json([
                 'message' => 'Failed to fetch nearby drivers',
             ], 500);
@@ -58,7 +61,7 @@ class DriverLocationController extends Controller
             'message' => 'Nearby drivers fetched successfully',
             'data' => $response->json()
         ]);
-}
+    }
 
     public function estimateFare(Request $request)
     {
@@ -67,7 +70,7 @@ class DriverLocationController extends Controller
         $dropoffLat = $request->input('dropoffLat');
         $dropoffLng = $request->input('dropoffLng');
 
-        $distance = $this->haversine($pickupLat,$pickupLng,$dropoffLat,$dropoffLng);
+        $distance = $this->haversine($pickupLat, $pickupLng, $dropoffLat, $dropoffLng);
 
         $baseFare = 2.50;
         $costPerKm = 1.20;
@@ -81,20 +84,21 @@ class DriverLocationController extends Controller
         ]);
 
     }
-    public function haversine($lat1, $lon1, $lat2, $lon2) {
-        $earthRadius = 6371; 
+    public function haversine($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371;
 
         $dLat = deg2rad($lat2 - $lat1);
         $dLon = deg2rad($lon2 - $lon1);
 
         $a = sin($dLat / 2) * sin($dLat / 2) +
-             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
-             sin($dLon / 2) * sin($dLon / 2);
+            cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+            sin($dLon / 2) * sin($dLon / 2);
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
 
         $distance = $earthRadius * $c;
 
-        return $distance; 
+        return $distance;
     }
 
     public function requestRide(RequestrideRequest $request)
@@ -109,7 +113,7 @@ class DriverLocationController extends Controller
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
-        ])->post(config('services.ride_service.url').'/ride/allocation', $payload);
+        ])->post(config('services.ride_service.url') . '/ride/allocation', $payload);
 
         if ($response->failed()) {
             return response()->json([
@@ -119,6 +123,41 @@ class DriverLocationController extends Controller
 
         return response()->json([
             'message' => 'Ride requested successfully',
+            'data' => $response->json()
+        ]);
+    }
+
+    public function sendNotification(DriverNotificationRequest $request)
+    {
+        $driver = $request->get('auth_driver');
+
+
+        DB::table('driver_web_push_subscriptions')
+            ->updateOrInsert(
+                ['driver_id' => $driver->id],
+                [
+                    'subscription' => json_encode($request->subscription),
+                    'browser' => $request->browser,
+                    'updated_at' => now(),
+                    'created_at' => now(),
+                ]
+            );
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+        ])->post(config('services.notification_service.url') . '/driver/notify', [
+                    'driver_id' => $driver->id,
+                    'subscription' => $request->subscription
+                ]);
+        if ($response->failed()) {
+            return response()->json([
+                'message' => 'Failed to send notification',
+            ], 500);
+        }
+
+        return response()->json([
+            'message' => 'Notification sent successfully',
             'data' => $response->json()
         ]);
     }
