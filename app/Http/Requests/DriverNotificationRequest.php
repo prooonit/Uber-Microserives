@@ -22,18 +22,18 @@ class DriverNotificationRequest extends FormRequest
     public function rules(): array
     {
         return 
-            [
+        [
             'subscription' => 'required|array',
-            'browser' => 'nullable|string'
-        ]
-        ;
-    }
-    public function messages(): array
-    {
-        return [
-            'subscription.required' => 'Subscription data is required',
-            'subscription.array' => 'Subscription must be a valid JSON object',
-            'browser.string' => 'Browser must be a string',
-        ];
+          
+            ]
+            ;
+            }
+            public function messages(): array
+            {
+                return [
+                    'subscription.required' => 'Subscription data is required',
+                    'subscription.array' => 'Subscription must be a valid JSON object',
+                     ];
+        
     }   
 }

@@ -27,7 +27,8 @@ Route::prefix('driver')->group(function () {
 
     Route::middleware(['driver.jwt.decode'])->group(function () {
         Route::post('/status', [DriverLocationController::class, 'updateStatus']);
-        Route::post('/notification', [DriverLocationController::class, 'sendNotification']);
+        Route::post('/notification-permission', [DriverLocationController::class, 'sendNotification']);
+      
     });
 
 });

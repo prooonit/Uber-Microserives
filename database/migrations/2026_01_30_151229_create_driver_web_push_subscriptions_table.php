@@ -17,7 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('driver_id');
              $table->json('subscription');
             $table->string('browser')->nullable();
-          
+            
             $table->unique('driver_id');
             
         });

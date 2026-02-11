@@ -102,18 +102,21 @@ class DriverLocationController extends Controller
     }
 
     public function requestRide(RequestrideRequest $request)
-    {
-        $payload = [
-            'pickup_lat' => $request->input('pickup_lat'),
-            'pickup_lng' => $request->input('pickup_lng'),
-            'dropoff_lat' => $request->input('dropoff_lat'),
-            'dropoff_lng' => $request->input('dropoff_lng'),
-        ];
-
+    {  
+        $user= $request->get('auth_user');
+        $userId = $user->id;
+        $payload= $request->only([
+            'pickup_lat',
+            'pickup_lng',
+            'dropoff_lat',
+            'dropoff_lng',
+        ]);
+        $payload['user_id'] = $userId;
+        
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
-        ])->post(config('services.ride_service.url') . '/ride/allocation', $payload);
+        ])->post(config('services.location_service.url') . '/ride/confirm-ride', $payload);
 
         if ($response->failed()) {
             return response()->json([
@@ -131,34 +134,17 @@ class DriverLocationController extends Controller
     {
         $driver = $request->get('auth_driver');
 
-
-        DB::table('driver_web_push_subscriptions')
-            ->updateOrInsert(
-                ['driver_id' => $driver->id],
-                [
-                    'subscription' => json_encode($request->subscription),
-                    'browser' => $request->browser,
-                    'updated_at' => now(),
-                    'created_at' => now(),
-                ]
-            );
-
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
-        ])->post(config('services.notification_service.url') . '/driver/notify', [
+        ])->post(config('services.location_service.url') . '/driver/notify', [
                     'driver_id' => $driver->id,
                     'subscription' => $request->subscription
                 ]);
-        if ($response->failed()) {
-            return response()->json([
-                'message' => 'Failed to send notification',
-            ], 500);
-        }
 
         return response()->json([
-            'message' => 'Notification sent successfully',
+            'message' => 'Subscription stored successfully',
             'data' => $response->json()
         ]);
-    }
+    }  
 }
