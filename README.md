@@ -146,7 +146,7 @@ redis-server
 composer install
 php artisan serve
 
-### Run Node Location Service- (link)
+### Run Node Location Service- (https://github.com/prooonit/uber-trip-service)
 
 npm install
 npm start
